@@ -1,3 +1,16 @@
+import sys
+import importlib
+
+# Force reload core modules to clear any cached imports
+if 'core.config_manager' in sys.modules:
+    importlib.reload(sys.modules['core.config_manager'])
+if 'core.database_manager' in sys.modules:
+    importlib.reload(sys.modules['core.database_manager'])
+if 'core.director' in sys.modules:
+    importlib.reload(sys.modules['core.director'])
+if 'core.app' in sys.modules:
+    importlib.reload(sys.modules['core.app'])
+
 from multiprocessing import Process
 
 from core.app import App

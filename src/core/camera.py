@@ -1,97 +1,85 @@
-import random
+"""
+Module: camera.py
 
+This module manages camera views for IntelliCaster.
+It provides functions to get available cameras and switch between them.
+"""
+
+import random
 from core import common
 
-
 class Camera:
-    """Class for changing cameras in iRacing"""
-    
     def __init__(self):
-        """Initializes the Camera class
-
-        Attributes:
-            cameras (dict): Dictionary of camera names and numbers
+        """Initialize the Camera class.
+        
+        Sets the current camera and all available cameras. If iRacing is not
+        connected yet, it will defer loading cameras until needed.
         """
-
-        # Camera Dictionary
-        self.cameras = self._get_cameras()
-
-        # Store current camera
         self.current_camera = None
-
+        self.cameras = []
+        # Don't try to load cameras immediately, only when requested
+    
     def _get_cameras(self):
-        """Returns a dictionary of camera names and numbers
+        """Get all cameras from iRacing.
         
         Returns:
-            dict: Dictionary of camera names and numbers
+            A list of all available cameras.
         """
-        # Create an empty dictionary
-        cameras = {}
-
-        # Populate the dictionary with the camera names and numbers
-        for camera in common.ir["CameraInfo"]["Groups"]:
-            cameras[camera["GroupName"]] = camera["GroupNum"]
-
-        # If realistic cameras is enabled, remove unrealistic cameras
-        if common.settings["commentary"]["realistic_camera"] == "1":
-            cams_to_remove = (
-                "Nose",
-                "Gearbox",
-                "LF Susp",
-                "RF Susp",
-                "LR Susp",
-                "RR Susp",
-                "Cockpit",
-                "Chase",
-                "Far Chase",
-                "Rear Chase"
-            )
-            for cam in cams_to_remove:
-                if cam in cameras:
-                    del cameras[cam]
-
-        # Return the dictionary
+        cameras = []
+        
+        # Check if iRacing is connected
+        if not common.ir or not common.ir.is_connected:
+            common.app.add_message("iRacing not connected. Camera information unavailable.")
+            return []
+            
+        try:
+            # Get cameras from iRacing
+            if common.ir.is_initialized and common.ir.is_connected:
+                for camera in common.ir["CameraInfo"]["Groups"]:
+                    cameras.append(camera)
+            
+            common.app.add_message(f"Found {len(cameras)} cameras.")
+        except (KeyError, AttributeError) as e:
+            common.app.add_message(f"Error getting cameras: {str(e)}")
+            return []
+            
         return cameras
     
-    def change_camera(self, car_idx, camera_name):
-        """Changes the camera for a specific car
+    def choose_random_camera(self, car_idx=0):
+        """Choose a random camera and switch to it.
         
         Args:
-            car_idx (int): Index of the car
-            camera_name (str): Name of the camera
+            car_idx: The car to focus on.
         """
-        common.ir.cam_switch_num(car_idx, self.cameras[camera_name])
-        self.current_camera = camera_name
-
-    def choose_random_camera(self, car_idx):
-        """Chooses a random camera for a specific car
-        
-        Args:
-            car_idx (int): Index of the car
-        """
-        # Get the cameras
-        cameras = list(self.cameras.keys())
-
-        # Remove angles that don't focus on a specific car
-        bad_angles = ("Scenic", "Pit Lane", "Pit Lane 2")
-        for angle in bad_angles:
-            if angle in cameras:
-                cameras.remove(angle)
-
-        # Remove current camera
-        if self.current_camera in cameras:
-            cameras.remove(self.current_camera)
-
-        # Set the probability of the cameras
-        weights = []
-        for camera in cameras:
-            if "TV" in camera:
-                weights.append(10)
-            else:
-                weights.append(1)
-
+        # Lazy loading of cameras if we don't have them yet
+        if not self.cameras:
+            self.cameras = self._get_cameras()
+            
+        # If we still don't have cameras, we can't do anything
+        if not self.cameras:
+            return
+            
         # Choose a random camera
-        random_camera = random.choices(cameras, weights=weights, k=1)[0]
-
-        # Change the camera
-        self.change_camera(car_idx, random_camera)
+        camera_idx = random.randint(0, len(self.cameras) - 1)
+        self.current_camera = self.cameras[camera_idx]
+        
+        # Switch to the camera
+        self.switch_camera(camera_idx, car_idx)
+    
+    def switch_camera(self, camera_idx, car_idx=0):
+        """Switch to a specific camera.
+        
+        Args:
+            camera_idx: The index of the camera to switch to.
+            car_idx: The car to focus on.
+        """
+        # Check if iRacing is connected
+        if not common.ir or not common.ir.is_connected:
+            common.app.add_message("iRacing not connected. Cannot switch camera.")
+            return
+            
+        try:
+            # Switch to the camera
+            common.ir.cam_switch_pos(camera_idx, car_idx, 0)
+        except Exception as e:
+            common.app.add_message(f"Error switching camera: {str(e)}")

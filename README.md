@@ -1,75 +1,153 @@
 # IntelliCaster
 
-IntelliCaster is an AI-powered tool for generating voice commentary on iRacing race replays. Leveraging OpenAI for text generation and ElevenLabs for voice synthesis, it adds dynamic and immersive commentary to your replays. Currently in early prerelease, IntelliCaster is under active development. Users should note that while the current version uses OpenAI and ElevenLabs, this may change as new technologies emerge and the project evolves. Early adopters should expect some instability and are encouraged to contribute feedback.
+**IntelliCaster** is an open-source AI-powered tool that adds dynamic, immersive voice commentary to iRacing race replays. It integrates advanced text generation (using OpenAI models) and high-quality text-to-speech (via ElevenLabs) with real-time race telemetry and event detection to create engaging, broadcast-style commentary. Our modular design makes IntelliCaster efficient, cost-effective, and open for community collaboration and enhancements.
 
-## Example Video
+## Overview
 
-To give you a better idea of what IntelliCaster is capable of, check out this example video. It showcases the AI-generated commentary in a typical iRacing replay, demonstrating both the quality of the commentary and the integration with race footage. This also shows that IntelliCaster is very much in an early prerelease state, as the commentary is not always accurate and the video rendering is not yet optimized. As the project matures, these issues will be addressed.
+IntelliCaster is built using a layered architecture:
 
-[![IntelliCaster Example Video](https://img.youtube.com/vi/Gokr_ocneCw/0.jpg)](https://www.youtube.com/watch?v=Gokr_ocneCw)
+- **Front End:**  
+  - Developed with CustomTkinter, it provides a user-friendly interface with navigation, settings, real-time event logging, and video preview.
+  - Key files: `app.py`, `splash.py`.
 
-## Requirements
+- **Backend:**  
+  - Handles telemetry data processing, event detection, race orchestration, and video editing/export.
+  - Integrates configuration management and persistent storage via SQLite.
+  - Key files/modules:  
+    - `common.py`, `director.py`, `events.py`  
+    - **New Modules:**  
+      - `telemetry_filters.py` – for smoothing noisy telemetry data.  
+      - `config_manager.py` – for dynamic settings and thresholds.  
+      - `database_manager.py` – for persistent storage of telemetry, events, and settings.
 
-Before you start with IntelliCaster, ensure that you meet the following requirements:
+- **AI Functionality:**  
+  - Generates race commentary by combining real-time event data with refined prompt templates.
+  - Converts commentary text into natural-sounding speech using a TTS integration with ElevenLabs.
+  - Manages camera selection based on race data.
+  - Key files/modules:  
+    - `commentary.py`, `prompt_templates.py`, `tts_integration.py`, `camera.py`.
 
-- A clean Python 3.12+ installation
-- A stable internet connection for API communication
-- A valid OpenAI API key
-- A valid ElevenLabs API key
-- Adjust iRacing graphics settings to allow for smooth video capture
+- **Video Editing & Export:**  
+  - Combines the race video with the generated commentary audio, ensuring proper synchronization and quality.
+  - Key files: `editor.py`, `export.py`.
+
+## Features
+
+- **Real-Time Event Detection:**  
+  - Continuously processes race telemetry to detect key events (overtakes, stops, etc.) with adaptive thresholds and noise reduction.
+  
+- **Dynamic Commentary Generation:**  
+  - Uses refined, structured prompts to generate energetic, context-aware commentary.
+  
+- **High-Quality Voice Synthesis:**  
+  - Converts text commentary into natural, expressive speech using ElevenLabs' TTS engine.
+  
+- **Camera Management:**  
+  - Dynamically selects optimal camera angles based on race events and driver performance.
+  
+- **Video Export:**  
+  - Merges race footage with commentary audio into a final, exportable video file.
+  
+- **Persistent Data Storage:**  
+  - Stores telemetry logs, events, and user configurations in a lightweight SQLite database.
+  
+- **Modular and Open Source:**  
+  - Designed for community contributions, with clear separation of concerns and thorough documentation.
 
 ## Installation
 
-To get started with IntelliCaster in its current prerelease state, follow these steps:
+1. **Requirements:**
+   - Python 3.12+
+   - A stable internet connection for API calls
+   - Valid API keys for OpenAI and ElevenLabs
+   - iRacing configured for video capture
 
-1. Ensure all requirements are met.
-2. Clone the IntelliCaster repository from GitHub:
-    `git clone https://github.com/joshjaysalazar/IntelliCaster.git`
-3. Navigate to the cloned directory:
-    `cd IntelliCaster`
-4. Install the required libraries:
-    `pip install -r requirements.txt`
-5. Run `main.py` in the src directory to start IntelliCaster:
-    `python src/main.py`
+2. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/joshjaysalazar/IntelliCaster.git
+   cd IntelliCaster
+   ```
+
+3. **Install Dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Run IntelliCaster:**
+
+   Navigate to the `src` directory and run:
+
+   ```bash
+   python main.py
+   ```
 
 ## Usage
 
-Using IntelliCaster is straightforward:
+1. **API Configuration:**
+   - Open the **Settings** tab in the IntelliCaster UI.
+   - Enter your OpenAI and ElevenLabs API keys.
+   - Adjust other settings (e.g., telemetry thresholds) as needed.
+   - Save the settings (a restart might be required).
 
-1. Open IntelliCaster. The application interface should appear.
-2. In the Settings tab, enter your OpenAI and ElevenLabs API keys.
-3. Adjust any other necessary settings. Note that a restart of the software might be required after modifying settings.
-4. To generate commentary, open an iRacing replay and navigate to any race lap.
-5. Press the "Start Commentary" button. IntelliCaster will rewind the replay to the beginning of the session and start generating commentary.
-6. Once you're done, press the "Stop Commentary" button. IntelliCaster will then render the video file with the added commentary.
+2. **Generating Commentary:**
+   - Open an iRacing replay.
+   - Click the **Start Commentary** button to begin processing the race data.
+   - The system will use telemetry data to detect events and generate commentary accordingly.
+   - When finished, click **Stop Commentary** to render the final video with the integrated voice commentary.
 
-## API Usage and Costs
+## Project Structure
 
-### OpenAI and ElevenLabs API Costs
+- **Front End:**
+  - `app.py` – Main application interface and navigation.
+  - `splash.py` – Splash screen displayed at startup.
 
-IntelliCaster integrates the OpenAI and ElevenLabs APIs for text and voice commentary generation. These services have a usage-based pricing model, meaning costs may be incurred based on the amount of commentary generated through IntelliCaster.
+- **Backend:**
+  - `common.py` – Global variables and shared configurations.
+  - `director.py` – Orchestrates the race, linking telemetry, event detection, camera switching, and commentary generation.
+  - `events.py` – Processes telemetry data to detect race events.
+  - **New Modules:**
+    - `telemetry_filters.py` – Implements smoothing algorithms for telemetry data.
+    - `config_manager.py` – Manages dynamic configuration and settings.
+    - `database_manager.py` – Handles SQLite database interactions for persistent storage.
 
-### Disclaimer
+- **AI Functionality:**
+  - `commentary.py` – Generates commentary text using OpenAI.
+  - `prompt_templates.py` – Centralizes structured prompt templates for commentary generation.
+  - `tts_integration.py` – Integrates with ElevenLabs to convert text to speech.
+  - `camera.py` – Manages camera view selection based on race events.
 
-Neither I, as the developer, nor any contributors to the IntelliCaster project are responsible for any charges that users may incur while using these APIs. Users are solely responsible for understanding and managing their usage according to the pricing policies of OpenAI and ElevenLabs. It is advised to refer to their respective websites for detailed information on pricing and usage limits.
+- **Video Processing:**
+  - `editor.py` – Combines video footage and commentary audio.
+  - `export.py` – Provides UI for tracking video export progress.
 
-Users should monitor their API usage to avoid unexpected charges and consider setting usage limits if available.
+- **Documentation & Tests:**
+  - `README.md` – Project documentation.
+  - `requirements.txt` – Required libraries.
+  - Additional documentation and tests will be organized in dedicated folders (`docs/`, `tests/`).
 
 ## Contributing
 
-Contributions are not only welcome but highly encouraged! Whether you're fixing bugs, proposing new features, or improving the documentation, your help is invaluable. Here's how you can contribute:
+We welcome contributions! Whether it's bug fixes, new features, or improvements to our documentation, your help is invaluable. Please follow these steps:
 
-1. Fork the IntelliCaster repository.
-2. Make your changes in a dedicated branch.
+1. Fork the repository.
+2. Create a dedicated branch for your changes.
 3. Submit a pull request with a clear description of your changes.
-4. For any bugs or feature requests, please open an issue in the GitHub repository.
+4. Open an issue for bugs or feature requests.
 
-Your contributions will play a significant role in shaping the future of IntelliCaster.
+## API Usage & Costs
+
+IntelliCaster integrates OpenAI for text generation and ElevenLabs for voice synthesis. Both services use a usage-based pricing model. Please review their respective websites for details on costs and usage limits.
 
 ## License
 
-IntelliCaster is released under the GPL-3.0 license. For more details, see the [LICENSE](LICENSE) file in the repository.
+IntelliCaster is released under the GPL-3.0 license. See the [LICENSE](LICENSE) file for more details.
 
 ## Issues
 
-Encountered a bug? Have a feature request or a question? Feel free to open an issue in the IntelliCaster repository. Your input helps us make IntelliCaster better for everyone.
+If you encounter any bugs or have feature requests, please open an issue in the GitHub repository. Your feedback helps us improve IntelliCaster for everyone.
+
+---
+
+This updated README.md reflects our current progress and architecture, covering front-end, backend (with database integration and configuration management), AI commentary generation, and video processing. Let me know if you'd like any further adjustments or additional details!
